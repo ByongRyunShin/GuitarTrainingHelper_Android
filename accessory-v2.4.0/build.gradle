@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('accessory-v2.4.0.jar'))
