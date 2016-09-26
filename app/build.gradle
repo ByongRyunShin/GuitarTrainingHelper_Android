@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile project(':sdk-v1.0.0')
     compile project(':accessory-v2.3.2')
+    compile files('libs/Converter.jar')
 }

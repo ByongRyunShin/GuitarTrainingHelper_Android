@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/GuitarHelperAndroid.iml" filepath="$PROJECT_DIR$/GuitarHelperAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/accessory-v2.3.2/accessory-v2.3.2.iml" filepath="$PROJECT_DIR$/accessory-v2.3.2/accessory-v2.3.2.iml" />
-      <module fileurl="file://$PROJECT_DIR$/accessory-v2.4.0/accessory-v2.4.0.iml" filepath="$PROJECT_DIR$/accessory-v2.4.0/accessory-v2.4.0.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk-v1.0.0/sdk-v1.0.0.iml" filepath="$PROJECT_DIR$/sdk-v1.0.0/sdk-v1.0.0.iml" />
     </modules>

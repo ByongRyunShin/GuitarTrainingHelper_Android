@@ -11,13 +11,26 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import org.herac.tuxguitar.io.gtp.GP4InputStream;
+import org.herac.tuxguitar.io.gtp.GTPSettings;
+import org.herac.tuxguitar.song.factory.TGFactory;
+import org.herac.tuxguitar.song.models.TGBeat;
+import org.herac.tuxguitar.song.models.TGMeasure;
+import org.herac.tuxguitar.song.models.TGSong;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -96,6 +109,64 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void sendBtClicked(View v){
+        String src="test.gp4";
+        File f=new File("test.gp4");
+
+        System.out.println("test.gp4".substring("test.gp4".lastIndexOf(".")+1, "test.gp4".length()));
+
+        TGSong song=null;
+        try {
+            InputStream inputStream = new FileInputStream("test.gp4");
+            BufferedInputStream stream= new BufferedInputStream(inputStream);
+
+            GP4InputStream reader = new GP4InputStream(new GTPSettings());
+            reader.init(new TGFactory(),stream);
+            if(reader.isSupportedVersion()){
+                song=reader.readSong();
+            }
+            System.out.println("악보 로드 완료");
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        PrintWriter pw;
+        try {
+            pw = new PrintWriter(new FileOutputStream("sheet.ghs"));
+            Iterator<TGMeasure> it=song.getTrack(0).getMeasures();
+            pw.write(song.getMeasureHeader(0).getTempo().getValue()+"\r\n");
+
+            while(it.hasNext()){
+                TGMeasure tgMeasure=(TGMeasure)it.next();
+
+                if(tgMeasure!=null){
+                    List<TGBeat> list = tgMeasure.getBeats();
+                    String before="X";
+                    Iterator<TGBeat> it2 =list.iterator();
+                    while(it2.hasNext()){
+                        TGBeat beat=(TGBeat)it2.next();
+                        try{
+                            if(beat.isRestBeat()){
+                                pw.write("MUTE,");
+                            }
+                            else if(beat.getText()==null){
+                                pw.write(before+",");
+                            }
+                            else{
+                                pw.write(beat.getText().getValue()+",");
+                                before=beat.getText().getValue();
+                            }
+                            pw.write(beat.getVoice(0).getDuration().getTime()+"\r\n");
+                        }catch(NullPointerException e){
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }
+            }
+            pw.close();
+        } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         File file = new File(SRC_PATH);
         mFileSize = file.length();
         Toast.makeText(mCtxt, SRC_PATH + " selected " + " size " + mFileSize + " bytes", Toast.LENGTH_SHORT).show();
