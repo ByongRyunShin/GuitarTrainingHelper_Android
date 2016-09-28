@@ -15,7 +15,12 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import org.herac.tuxguitar.io.gtp.GP1InputStream;
+import org.herac.tuxguitar.io.gtp.GP2InputStream;
+import org.herac.tuxguitar.io.gtp.GP3InputStream;
 import org.herac.tuxguitar.io.gtp.GP4InputStream;
+import org.herac.tuxguitar.io.gtp.GP5InputStream;
+import org.herac.tuxguitar.io.gtp.GTPInputStream;
 import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.TGBeat;
@@ -74,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(mCtxt, " 외장메모리가 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            mDirPath = Environment.getExternalStorageDirectory() + File.separator + "GuitarHelper";
+            mDirPath = Environment.getExternalStorageDirectory() + File.separator + "GuitarHelper"+File.separator;
             File file = new File(mDirPath);
             if (file.mkdirs()) {
                 Toast.makeText(mCtxt, "외장메모리 존재" + mDirPath, Toast.LENGTH_LONG).show();
@@ -105,33 +110,55 @@ public class MainActivity extends AppCompatActivity {
         if (mSenderService != null) {
             mSenderService.connect();
         } else {
-            Toast.makeText(getApplicationContext(), "Service not Bound", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "기어를 연결하세요~", Toast.LENGTH_SHORT).show();
         }
     }
     public void sendBtClicked(View v){
-        String src="test.gp4";
-        File f=new File("test.gp4");
+        String filename=(String)fFind_ListView.getItemAtPosition(fFind_ListView.getCheckedItemPosition());
+        String src=mDirPath+filename;
 
-        System.out.println("test.gp4".substring("test.gp4".lastIndexOf(".")+1, "test.gp4".length()));
+        String ext=src.substring(src.lastIndexOf(".")+1, src.length());
 
         TGSong song=null;
         try {
-            InputStream inputStream = new FileInputStream("test.gp4");
+            InputStream inputStream = new FileInputStream(src);
             BufferedInputStream stream= new BufferedInputStream(inputStream);
 
-            GP4InputStream reader = new GP4InputStream(new GTPSettings());
-            reader.init(new TGFactory(),stream);
-            if(reader.isSupportedVersion()){
-                song=reader.readSong();
+            GTPInputStream reader=null;
+
+            switch(ext) {
+                case "gp1":
+                    reader = new GP1InputStream(new GTPSettings());
+                    break;
+                case "gp2":
+                    reader = new GP2InputStream(new GTPSettings());
+                    break;
+                case "gp3":
+                    reader = new GP3InputStream(new GTPSettings());
+                    break;
+                case "gp4":
+                    reader = new GP4InputStream(new GTPSettings());
+                    break;
+                case "gp5":
+                    reader = new GP5InputStream(new GTPSettings());
+                    break;
+                default:
+
+                    break;
             }
-            System.out.println("악보 로드 완료");
+            if(reader!=null){
+                reader.init(new TGFactory(),stream);
+                if(reader.isSupportedVersion()){
+                    song=reader.readSong();
+                }
+            }
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        PrintWriter pw;
+        PrintWriter pw=null;
         try {
-            pw = new PrintWriter(new FileOutputStream("sheet.ghs"));
+            pw = new PrintWriter(new FileOutputStream(src.substring(0, src.lastIndexOf(".")+1)+"ghs"));
             Iterator<TGMeasure> it=song.getTrack(0).getMeasures();
             pw.write(song.getMeasureHeader(0).getTempo().getValue()+"\r\n");
 
@@ -167,13 +194,11 @@ public class MainActivity extends AppCompatActivity {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        File file = new File(SRC_PATH);
-        mFileSize = file.length();
-        Toast.makeText(mCtxt, SRC_PATH + " selected " + " size " + mFileSize + " bytes", Toast.LENGTH_SHORT).show();
-        String filename=(String)fFind_ListView.getItemAtPosition(fFind_ListView.getCheckedItemPosition());
+        Toast.makeText(mCtxt, src.substring(0, src.lastIndexOf(".")+1)+"ghs", Toast.LENGTH_SHORT).show();
+        //String filename=(String)fFind_ListView.getItemAtPosition(fFind_ListView.getCheckedItemPosition());
         if (isSenderServiceBound()) {
             try {
-                int trId = mSenderService.sendFile(SRC_PATH+filename);
+                int trId = mSenderService.sendFile(src.substring(0, src.lastIndexOf(".")+1)+"ghs");
                 mTransactions.add((long) trId);
                 currentTransId = trId;
             } catch (IllegalArgumentException e) {
@@ -197,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mCtxt, "Error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mCtxt, "에러!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -219,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mCtxt, "Transfer Completed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mCtxt, "전송완료!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
